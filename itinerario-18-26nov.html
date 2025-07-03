@@ -1,1 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Itinerario Interactivo - 18 al 26 Nov</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+    }
+    .map {
+      width: 100%;
+      height: 420px;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+      margin-top: 1em;
+      margin-bottom: 2em;
+    }
+    .container {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h2 {
+      margin-bottom: 10px;
+      color: #1a237e;
+    }
+    .day-section {
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px #0001;
+      padding: 20px;
+    }
+    .day-section p {
+      margin: 0.2em 0;
+    }
+    @media(max-width:700px){
+      .container{padding:2vw;}
+      .map{height:250px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="itinerary"></div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const customIcon = (emoji) => L.divIcon({ html: `<div style='font-size: 18px;'>${emoji}</div>`, className: 'text-center' });
+
+    const itineraries = [
+      // ... (el bloque completo de tus días del 18 al 26 Nov aquí)
+    ];
+
+    const container = document.getElementById("itinerary");
+
+    itineraries.forEach((dayData, i) => {
+      const div = document.createElement("div");
+      div.className = "day-section";
+      let vueloInfo = dayData.vuelo ? `<p><strong>✈️ Vuelo:</strong> ${dayData.vuelo}</p>` : "";
+      div.innerHTML = `
+        <h2>📍 ${dayData.day}</h2>
+        <p><strong>⏰ Hora de salida:</strong> ${dayData.salida || "—"}</p>
+        ${vueloInfo}
+        <p><strong>🚍/🚇 Transporte local:</strong> ${dayData.transport?.name || "—"}</p>
+        <p><strong>📉 Tráfico:</strong> ${dayData.traffic}</p>
+        <p><strong>🌡️ Clima:</strong> ${dayData.weather} – <strong>Recomendación:</strong> ${dayData.clothing}</p>
+        <p><strong>💰 Presupuesto:</strong> ${dayData.budget}</p>
+        <p><strong>🏭 Fábricas de repuestos visitadas:</strong> ${dayData.factories}</p>
+        <p><strong>👥 Traductores disponibles:</strong> ${dayData.translators}</p>
+        <p><strong>🏦 Bancos extranjeros:</strong> ${dayData.banks}</p>
+        <div id="${dayData.id}" class="map"></div>
+      `;
+      container.appendChild(div);
+
+      setTimeout(() => {
+        if (!dayData.end) return;
+        const map = L.map(dayData.id).setView(dayData.end, 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        if (dayData.start) {
+          L.marker(dayData.start, { icon: customIcon('1️⃣') }).addTo(map).bindPopup("Salida");
+          L.polyline([dayData.start, dayData.end], { color: 'blue' }).addTo(map);
+        }
+        L.marker(dayData.end, { icon: customIcon('2️⃣') }).addTo(map).bindPopup("Llegada / Destino final");
+
+        dayData.hotels?.forEach(h => L.marker(h.coords, { icon: customIcon('🏨') }).addTo(map).bindPopup(h.name));
+        dayData.restaurants?.forEach(r => L.marker(r.coords, { icon: customIcon('🍽️') }).addTo(map).bindPopup(r.name));
+        if (dayData.transport) L.marker(dayData.transport.coords, { icon: customIcon('🚕') }).addTo(map).bindPopup(dayData.transport.name);
+        if (dayData.bodega) L.marker(dayData.bodega.coords, { icon: customIcon('📦') }).addTo(map).bindPopup(dayData.bodega.name);
+      }, 350);
+    });
+  </script>
+</body>
+</html>
